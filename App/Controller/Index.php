@@ -2,131 +2,52 @@
 namespace App\Controller;
 
 use \Aqua\Base\Request;
-use \App\Base\Helper\Captcha;
-use \App\Base\Helper\Protection;
+use \App\Base\Helper\Html;
 
 class Index extends \Aqua\Base\Controller
 {
 
-    public function index($page = 1)
+    public function index()
     {
-        $page = (int) $page;
-        $sortField =  Request::get('field', 'created_at');
-        $orderMethod  = strtoupper(Request::get('order', 'desc'));
-        $notify = ['error' => null, 'message' => null];
-        $comment =  new \App\Model\Comment;
-
-        try {
-
-            if (Request::post('comment')) {
-                $name = Request::post('name');
-                $email = Request::post('email');
-                $homepage = Request::post('homepage');
-                $captcha = Request::post('captcha');
-                $csrToken = Request::post('csrf_token');
-                $ip = Request::getIp();
-                $agent = Request::getUseAgent();
-                $message = Request::post('message');
-
-                if (!Protection::validateCsrfToken($csrToken)) {
-                    throw new \Exception('Error token validation');
-                }
-
-                if (empty($name)) {
-                    throw new \Exception('Empty name');
-                }
-
-                if (!Captcha::validate($captcha)) {
-                    throw new \Exception('Error validate captcha');
-                }
-
-                if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                    throw new \Exception('Email not valid');
-                }
-
-                if (!empty($homepage)
-                    && !filter_var($homepage, FILTER_VALIDATE_URL)) {
-                    throw new \Exception('Homepage is not valid');
-                }
-
-                if (empty($message)) {
-                    throw new \Exception('Empty message');
-                }
-
-
-                $params = [
-                    'name' => $name,
-                    'email' => $email,
-                    'homepage' => $homepage,
-                    'ip' => $ip,
-                    'agent' => $agent,
-                    'message' => $message,
-                    'created_at' => time(),
-                ];
-
-                if (!$comment->save($params)) {
-                    throw new \Exception('Error save comment');
-                }
-
-                $notify['message'] = 'Comment success add';
-
-                unset($_POST);
-            }
-
-
-        } catch (\Exception $e) {
-            $notify['error']  =  $e->getMessage();
-        }
-
-        $commentList = [];
-
-        try {
-            if (!in_array($sortField, $comment->sortListAllow)) {
-                throw new \Exception('Error validate field');
-            }
-
-            if (!in_array($orderMethod, $comment->orderListAllow)) {
-                throw new \Exception('Error validate order parametr');
-            }
-
-            $commentList = $comment->commentList($page, $sortField, $orderMethod);
-        } catch (\Exception $e) {
-            $notify['error']  =  $e->getMessage();
-        }
-
-        $this->render('index', [
-            'commentList' => $commentList,
-            'commentCount' => $comment->getCount()['count'],
-            'pageCount' =>  \App\Model\Comment::PAGE_COUNT,
-            'page' =>  $page,
-            'notify' => $notify
-        ]);
+       
     }
 
 
-    public function lists()
+    public function getList()
     {
-        $family = new  \App\Model\FamilyTree;
+        $notify = ['error' => null, 'message' => null];
 
-        $list = $family->lists();
+        try {
+            $family = new  \App\Model\FamilyTree;
+            $list = $family->getList();
 
-        $new_list = [];
-
-        foreach ($list as  $value) {
-            if ($value['parent_id'] == null) {
-               $value['parent_id'] = 0;
+            if (!is_array($list)) {
+                throw new \Exception('Empty list');
             }
-            $new_list[] = "[{$value['id']}, {$value['parent_id']}, \"{$value['name']}\"]";
+
+
+            $treeList = [];
+            foreach ($list as  $value) {
+                $value['name'] = Html::escape($value['name']);
+                $treeList[] = "[{$value['id']}, {$value['parent_id']}, \"{$value['name']}\"]";
+            }
+
+            if (empty($treeList)) {
+                throw new \Exception('Empty tree');
+            }
+
+        } catch (\Exception $e) {
+            $notify['error']  =  $e->getMessage();
         }
+
         
+        $this->render('list', [
+            'treeList' => $treeList,
+            'notify'    => $notify,
 
-        echo '[' . implode(',', $new_list) .']';   
+        ]);
 
-
-
-        //echo json_encode($list);
-
-       // echo '[[1,0,"1111"], [2,0,"2222"], [3,0,"3333"], [4,2,"child"]]';
+ 
 
     }
 
@@ -134,15 +55,75 @@ class Index extends \Aqua\Base\Controller
 
     public function add()
     {
-       $family = new  \App\Model\FamilyTree;
+       try {
 
-       $params  = [
-            'name'  => Request::post('name'),
-            'parent_id'  => Request::post('parent_id'),
-            'created_at'    => time(),
+           $family = new  \App\Model\FamilyTree;
+           $name = Request::post('name');
+           $parent_id = (int) Request::post('parent_id');
 
-       ];
-       $family->add($params);
+            if (empty($name)) {
+                throw new \Exception('Empty name');
+            }
+
+            if (empty($parent_id)) {
+                throw new \Exception('Empty parent id');
+            }
+
+           $params  = [
+                'name'  => Html::escape($name),
+                'parent_id'  => $parent_id,
+                'created_at'    => time(),
+
+           ];
+
+           if (!$family->add($params)) {
+                 throw new \Exception('Error add family');
+           }
+
+           $notify['message']  = 'Add family success';
+
+
+        } catch (\Exception $e) {
+            $notify['error']  =  $e->getMessage();
+        }
+
+
+        header("Content-type: application/json");
+        $this->render('add', [
+            'notify'    => $notify,
+
+        ]);
+
+    }
+
+
+    public function delete()
+    {
+       try {
+
+           $family = new  \App\Model\FamilyTree;
+           $id = (int) Request::post('id');
+
+            if (empty($id)) {
+                throw new \Exception('Empty id');
+            }
+
+            if (!$family->delete($id)) {
+                 throw new \Exception('Error delete family');
+            }
+
+           $notify['message']  = 'delete family success';
+
+
+        } catch (\Exception $e) {
+            $notify['error']  =  $e->getMessage();
+        }
+
+        header("Content-type: application/json");
+        $this->render('add', [
+            'notify'    => $notify,
+        ]);
+
     }
 
 }

@@ -10,14 +10,11 @@ return [
     ],
     [
         'pattern' => 'tree/lists',
-        'action' => 'Index/lists',
+        'action' => 'Index/getList',
     ],
     [
-        'pattern' => 'page/:page',
-        'action' => 'Index/index',
+        'pattern' => 'tree/delete',
+        'action' => 'Index/delete',
     ],
-    [
-        'pattern' => 'sort/:field',
-        'action' => 'Index/index',
-    ],
+
 ];

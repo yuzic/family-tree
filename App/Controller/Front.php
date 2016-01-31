@@ -13,22 +13,25 @@ class Front extends \Aqua\Base\Controller
             $params = $route->byUrl($config, \Aqua\Base\Request::getUri());
 
             ob_start();
+
             $run  = $this->run($params['controller'], $params['method'], $params['params']);
+
             if (!$run) {
                 throw new \Exception('Error find action');
             }
             $message['content'] = ob_get_contents();
+            
             ob_end_clean();
+            
         } catch (\Exception $e) {
             header("HTTP/1.0 404 Not Found");
             $message['error']  =  $e->getMessage();
         }
 
         if (!\Aqua\Base\Request::isAjax()) {
-
             $this->render('index', $message);
         } else {
-            echo $message['content'];
+             $this->render('content', $message);
         }
     }
 

@@ -4,7 +4,7 @@ namespace App\Model;
 class FamilyTree extends \Aqua\Db\Model
 {
 
-    public function lists()
+    public function getList()
     {
         $sql = 'WITH RECURSIVE "recursive_family" (
                 "id",
@@ -31,7 +31,7 @@ class FamilyTree extends \Aqua\Db\Model
             )
             SELECT
               "id",
-              "parent_id",
+              COALESCE("parent_id", 0) "parent_id",
               "name"
             FROM "recursive_family"';
 
@@ -59,6 +59,18 @@ class FamilyTree extends \Aqua\Db\Model
                 COMMIT;';
 
         $query = (new \Aqua\Db\Query)->instances($sql, $params);
+
+        return  \Aqua\Db\Connection::query($query);
+    }
+
+    public function delete($id)
+    {
+        $sql = 'DELETE FROM "family_tree"
+                WHERE "id"=?id
+                RETURNING *';
+        $query = (new \Aqua\Db\Query)->instances($sql, [
+            'id'  => $id
+        ]);
 
         return  \Aqua\Db\Connection::query($query);
     }  
