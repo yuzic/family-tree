@@ -1,0 +1,10 @@
+{
+  "name": "Itcoder",
+  "type": "project",
+  "autoload": {
+    "psr-4": {
+      "App\\": "App/",
+      "Aqua\\": "Aqua/"
+    }
+  }
+}
