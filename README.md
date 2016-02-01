@@ -22,8 +22,6 @@ DIRECTORY STRUCTURE
 
 REQUIREMENTS
 ------------
-
-    Yii > v2
     PostgreSQL > 9.4
     Php > 5.5
     Composer
