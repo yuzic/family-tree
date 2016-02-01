@@ -84,6 +84,12 @@
 		{
 
 			var id = myTree.getSelectedItemId();
+
+			if (id == 1) {
+				alert("Нельзя удалить вселенную!");
+				return ;
+			}
+
 			if (id == '') {
 				alert("выберите семью!");
 				return ;

@@ -1,7 +1,7 @@
 CREATE TABLE "family_tree"
 (
   "id" serial NOT NULL,
-  "parent_id" INTEGER DEFAULT NULL references family_tree(id),
+  "parent_id" INTEGER DEFAULT NULL references family_tree(id) ON DELETE CASCADE,
   "name"  CHARACTER VARYING(500) NOT NULL,
   "created_at" INTEGER NOT NULL,
   "modified_at" INTEGER DEFAULT NULL,
@@ -14,10 +14,5 @@ CREATE TABLE "family_tree"
                   "parent_id",
                   "created_at"
                 )
-                VALUES
-                (
-                  'Все семьи',
-                  null,
-                  1
-                );
+                VALUES('Все семьи', null, 1);
 
