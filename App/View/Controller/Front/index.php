@@ -85,6 +85,8 @@
 
 			var id = myTree.getSelectedItemId();
 
+			console.log(id);
+
 			if (id == 1) {
 				alert("Нельзя удалить вселенную!");
 				return ;
